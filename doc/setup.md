@@ -31,3 +31,41 @@ const installDevtools = async () => {
 // added installDevtools step
 app.whenReady().then(installDevtools).then(createWindow);
 ```
+
+## Add Routing
+
+Ran `yarn add -D vue-router`
+
+Added `packages/renderer/src/router/index.ts` which uses `require('cue-router').createRouter()`
+and configures routes.
+
+Updated `packages/renderer/src/main.ts` to use router:
+
+```ts
+import { createApp } from 'vue'
+import App from './App.vue'
+import './samples/node-api'
+import router from './router' // added this
+import { createPinia } from 'pinia'
+
+createApp(App)
+  .use(createPinia())
+  .use(router) // added this
+  .mount('#app')
+  .$nextTick(window.removeLoading)
+```
+
+Of course I added some routes into `packages/renderer/src/views` that are loaded
+into the `router/index.ts` script and updated `App.vue` to include the
+`router-view` and a small nav to link to the routes and removed the other code:
+
+```vue
+<template>
+  <nav>
+    <router-link to="/">Home</router-link> |
+    <router-link to="/counter">Counter</router-link> |
+    <router-link to="/about">About</router-link>
+  </nav>
+  <router-view/>
+</template>
+```

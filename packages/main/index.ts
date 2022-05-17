@@ -52,9 +52,9 @@ async function createWindow() {
 const installDevtools = async () => {
   if (process.env.NODE_ENV !== 'production') {
     try {
-      await installExtension('nhdogjmejiglipccpnnnanhbledajbpd')
-    } catch (e) {
-      console.error('Vue Devtools failed to install:', e.toString())
+      await installExtension('nhdogjmejiglipccpnnnanhbledajbpd');
+    } catch (e: any) {
+      console.error('Vue Devtools failed to install:', `${e}`);
     }
   }
 }
