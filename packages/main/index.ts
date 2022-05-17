@@ -1,6 +1,7 @@
 import { app, BrowserWindow, shell } from 'electron'
 import { release } from 'os'
 import { join } from 'path'
+import installExtension from 'electron-devtools-installer'
 
 // Disable GPU Acceleration for Windows 7
 if (release().startsWith('6.1')) app.disableHardwareAcceleration()
@@ -48,7 +49,17 @@ async function createWindow() {
   })
 }
 
-app.whenReady().then(createWindow)
+const installDevtools = async () => {
+  if (process.env.NODE_ENV !== 'production') {
+    try {
+      await installExtension('nhdogjmejiglipccpnnnanhbledajbpd')
+    } catch (e) {
+      console.error('Vue Devtools failed to install:', e.toString())
+    }
+  }
+}
+
+app.whenReady().then(installDevtools).then(createWindow);
 
 app.on('window-all-closed', () => {
   win = null
