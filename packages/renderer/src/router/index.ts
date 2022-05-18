@@ -1,7 +1,5 @@
 import { createRouter, createWebHashHistory } from 'vue-router'
-import AboutView from '../views/AboutView.vue'
 import HomeView from '../views/HomeView.vue'
-import CounterView from '../views/CounterView.vue'
 import SampleFileView from '../views/SampleFileView.vue'
 
 const routes = [
@@ -13,7 +11,7 @@ const routes = [
   {
     path: '/counter',
     name: 'counter',
-    component: CounterView
+    component: () => import('../views/CounterView.vue') // lazy import code splitting
   },
   {
     path: '/sample-file',
@@ -23,7 +21,7 @@ const routes = [
   {
     path: '/about',
     name: 'about',
-    component: AboutView
+    component: () => import('../views/AboutView.vue') // lazy importing code cplitting
   }
 ]
 
