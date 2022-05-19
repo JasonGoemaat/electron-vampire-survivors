@@ -22,4 +22,19 @@
   color: #2c3e50;
   margin-top: 60px;
 }
+
+.column {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  
+  & > * {
+    margin: 0.5em;
+  }
+}
+
+.error {
+  color: red;
+  font-weight: bold;;
+}
 </style>

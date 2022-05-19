@@ -1,17 +1,25 @@
 const rx = /'charName':'/g
 
+export interface ParsedBundle {
+  objects: BundleObject[],
+  characters: BundleCharacter[],
+  mobs: BundleCharacter[]
+}
+
 export interface BundleObject {
   start: number,
   end: number
 }
 
 export interface BundleCharacter {
-  characterStart: number,
-  characterEnd: number
-  characterStats: Map<string, BundleObject>
+  name: string,
+  start: number,
+  end: number,
+  stats: any,
+  positions: any
 }
 
-const parseFile = (contents: string) => {
+export const parseObjects = (contents: string) => {
   const stack: number[] = [];
   const containedObjects: number[] = [];
   const objects: any[] = [];
@@ -53,78 +61,78 @@ const indexOfProperty = (contents: string, start: number, end: number, propertyN
   return [valueStart, valueEnd, contents.substring(valueStart, valueEnd)];
 }
 
-const parseCharacters = (contents: string) => {
+export interface CharacterProperty {
+  startValue: number,
+  endValue: number,
+  value: string
+}
+
+export const CHARACTER_PROPERTY_NAMES = [
+  'charName',
+  'surname',
+  'description',
+  'textureName',
+  'spriteName',
+  'isBought',
+  'level',
+  'cooldown',
+  'maxHp',
+  'armor',
+  'regen',
+  'moveSpeed',
+  'power',
+  'area',
+  'speed',
+  'duration',
+  'amount',
+  'luck',
+  'growth',
+  'greed',
+  'curse',
+  'magnet',
+  'revivals',
+  'rerolls',
+  'skips',
+  'banish',
+]
+
+export const parseCharacters = (contents: string, objects: BundleObject[]): BundleCharacter[] => {
   const characters = [];
-  const objects = parseFile(contents);
   for (let i = 0; i < objects.length; i++) {
     const { start, end } = objects[i];
     const charName = indexOfProperty(contents, start, end, 'charName')
     if (charName[0] < 0) continue; // not found
     const nextCharName = indexOfProperty(contents, charName[1], end, 'charName');
     if (nextCharName[0] >= 0) continue; // multiples
-    console.log('Found character, charName is:', charName[2]);
 
-    const level = indexOfProperty(contents, start, end, 'level');
-    const cooldown = indexOfProperty(contents, start, end, 'cooldown');
-    const surname = indexOfProperty(contents, start, end, 'surname');
-    const textureName = indexOfProperty(contents, start, end, 'textureName');
-    const spriteName = indexOfProperty(contents, start, end, 'spriteName');
-    const description = indexOfProperty(contents, start, end, 'description');
-    const isBought = indexOfProperty(contents, start, end, 'isBought');
-    const price = indexOfProperty(contents, start, end, 'price');
-    const maxHp = indexOfProperty(contents, start, end, 'maxHp');
-    const armor = indexOfProperty(contents, start, end, 'armor');
-    const regen = indexOfProperty(contents, start, end, 'regen');
-    const moveSpeed = indexOfProperty(contents, start, end, 'moveSpeed');
-    const power = indexOfProperty(contents, start, end, 'power');
-    const cooldown2 = indexOfProperty(contents, cooldown[1], end, 'cooldown');
-    const area = indexOfProperty(contents, start, end, 'area');
-    const speed = indexOfProperty(contents, start, end, 'speed');
-    const duration = indexOfProperty(contents, start, end, 'duration');
-    const amount = indexOfProperty(contents, start, end, 'amount');
-    const luck = indexOfProperty(contents, start, end, 'luck');
-    const growth = indexOfProperty(contents, start, end, 'growth');
-    const greed = indexOfProperty(contents, start, end, 'greed');
-    const curse = indexOfProperty(contents, start, end, 'curse');
-    const magnet = indexOfProperty(contents, start, end, 'magnet');
-    const revivals = indexOfProperty(contents, start, end, 'revivals');
-    const rerolls = indexOfProperty(contents, start, end, 'rerolls');
-    const skips = indexOfProperty(contents, start, end, 'skips');
-    const banish = indexOfProperty(contents, start, end, 'banish');
+    const stats: any = {};
+    const positions: any = {};
+    CHARACTER_PROPERTY_NAMES.forEach(propertyName => {
+      const [startValue, endValue, value] = indexOfProperty(contents, start, end, propertyName);
+      stats[propertyName] = value;
+      positions[propertyName] = { startValue, endValue };
+    });
 
     characters.push({
-      charName, 
-      surname,
-      description,
-      maxHp,
-      armor,
-      regen,
-      moveSpeed,
-      power,
-      cooldown,
-      cooldown2,
-      area,
-      speed,
-      duration,
-      amount,
-      luck,
-      growth,
-      greed,
-      curse,
-      magnet,
-      revivals,
-      rerolls,
-      skips,
-      banish,
-      textureName,
-      spriteName,
+      name: charName[2],
+      start,
+      end,
+      stats,
+      positions
     })
   }
 
   return characters;
 }
 
-export default {
-  parseFile,
-  parseCharacters
+export const parseBundle = (contents: string): ParsedBundle => {
+  const objects = parseObjects(contents);
+  let characters = parseCharacters(contents, objects);
+  const mobs = characters.filter(x => x.stats?.description.length <= 2);
+  characters = characters.filter(x => x.stats?.description.length > 2);
+  return {
+    objects,
+    characters,
+    mobs
+  }
 }

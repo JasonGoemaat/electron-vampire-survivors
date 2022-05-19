@@ -1,5 +1,7 @@
 export interface Config {
-  pathToVSBundle: string,
-  pathToVSBundleBackup: string,
-  lastVSBundleMD5: string
+  lastSavedMd5: string
 }
+
+export const createDefaultConfig = (): Config => ({
+  lastSavedMd5: ''
+})

@@ -17,6 +17,7 @@ export default defineConfig({
     rollupOptions: {
       external: [
         'electron',
+        'registry-js',
         ...builtinModules,
         // @ts-ignore
         ...Object.keys(pkg.dependencies || {}),

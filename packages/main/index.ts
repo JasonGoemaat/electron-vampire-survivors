@@ -20,6 +20,8 @@ let win: BrowserWindow | null = null
 async function createWindow() {
   win = new BrowserWindow({
     title: 'Main window',
+    width: 1024,
+    height: 960,
     webPreferences: {
       preload: join(__dirname, '../preload/index.cjs'),
       nodeIntegration: true,
@@ -82,3 +84,6 @@ app.on('activate', () => {
     createWindow()
   }
 })
+
+import init from './services/init'
+init();

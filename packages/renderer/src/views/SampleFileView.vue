@@ -5,16 +5,16 @@
   <p>md5: {{ file.md5 }} </p>
   <p>Contents Length: {{ file.contents.length }}</p>
   <p>Objects Length: {{ objects.length }}</p>
-  <button @click="parseCharacters()">Parse Characters</button>
+  <button @click="doParseCharacters()">Parse Characters</button>
 </template>
 
 <script lang="ts" setup>
-import SaveGameService, { FileWithHash} from '../services/FileService';
-import ParserService from '../services/ParserService';
+import { loadBundle, FileWithHash } from '../services/BundleService';
+import { parseObjects, parseCharacters } from '../services/ParserService';
 
-const file = SaveGameService.loadFile('D:\\games\\steam\\steamapps\\common\\Vampire Survivors\\resources\\app\\.webpack\\renderer\\main.bundle.js')
-const objects = file.exists ? ParserService.parseFile(file.contents) : [];
-const parseCharacters = () => {
-  (window as any).characters = ParserService.parseCharacters(file.contents);
+const file = loadBundle('D:\\games\\steam\\steamapps\\common\\Vampire Survivors\\resources\\app\\.webpack\\renderer\\main.bundle.js')
+const objects = file.exists ? parseObjects(file.contents) : [];
+const doParseCharacters = () => {
+  (window as any).characters = parseCharacters(file.contents, objects);
 }
 </script>
