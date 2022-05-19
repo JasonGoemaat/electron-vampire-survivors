@@ -1,15 +1,17 @@
 import { defineStore } from 'pinia'
 import { ipcRenderer } from 'electron'
-import { existsSync, readFileSync, writeFileSync } from 'fs'
+import { existsSync, readFileSync, writeFileSync,  } from 'fs'
 import { loadBundle, FileWithHash } from '../services/BundleService'
-import { Config, createDefaultConfig } from '../models/Config'
+import { createDefaultConfig, CharacterMod } from '../models/Config'
 import { parseBundle, ParsedBundle } from '../services/ParserService'
+import { createHash } from 'crypto'
 
 export enum GameStates {
-  start,
-  needBackup,
-  initialized,
-  error
+  Start,
+  NeedBackup,
+  HashMismatch,
+  Initialized,
+  Error
 }
 
 export interface MainSettings {
@@ -24,14 +26,12 @@ export interface MainSettings {
 export const useMainStore = defineStore({
   id: 'main',
   state: () => ({
-    state: GameStates.start,
+    state: GameStates.Start,
     mainSettings: <MainSettings | undefined>undefined,
     haveGamePath: false,
     haveBackupFile: false,
     haveBundle: false,
     error: '',
-    bundlePath: '',
-    backupPath: '',
     userData: '',
     message: 'Initializing...',
     bundle: <FileWithHash | undefined>undefined,
@@ -39,13 +39,18 @@ export const useMainStore = defineStore({
     config: createDefaultConfig(),
     parsed: <ParsedBundle | undefined>undefined
   }),
+  getters: {
+    characters(): any[] {
+      return this.parsed?.characters || [];
+    }  },
   actions: {
     async initialize() {
+      this.state = GameStates.Start;
       const result = await ipcRenderer.invoke('init');
       
       this.mainSettings = result;
       if (result.error) {
-        this.state = GameStates.error;
+        this.state = GameStates.Error;
         this.error = result.error;
         return;
       }
@@ -54,7 +59,7 @@ export const useMainStore = defineStore({
       this.haveBackupFile = existsSync(this.mainSettings?.backupPath || '');
       this.haveBundle = existsSync(this.mainSettings?.bundlePath || '');
       if (!(this.haveBackupFile && this.haveBundle)) {
-        this.state = GameStates.needBackup;
+        this.state = GameStates.NeedBackup;
         return;
       }
 
@@ -62,7 +67,7 @@ export const useMainStore = defineStore({
       this.backup = loadBundle(this.mainSettings?.backupPath || '');
 
       if (!(this.bundle.exists && this.backup.exists)) {
-        this.state = GameStates.error;
+        this.state = GameStates.Error;
         this.error = "Unknown error - we have the backup and bundle, but something went wrong :(";
         return;
       }
@@ -70,9 +75,13 @@ export const useMainStore = defineStore({
       // get config, create if needed
       if (!existsSync(this.mainSettings?.configPath || '')) {
         this.config.lastSavedMd5 = this.bundle.md5;
-        writeFileSync(this.mainSettings?.configPath || '', JSON.stringify(this.config), { encoding: 'utf-8' });
+        await this.saveConfig();
       }
       this.config = JSON.parse(readFileSync(this.mainSettings?.configPath || '', { encoding: 'utf-8' }));
+      if (this.config.lastSavedMd5 !== this.backup.md5) {
+        this.state = GameStates.HashMismatch;
+        return;
+      }
 
       // parse the backup bundle
       const parsed = parseBundle(this.backup.contents);
@@ -81,7 +90,54 @@ export const useMainStore = defineStore({
       (window as any).characters = parsed.characters;
 
       // parse *backup* bundle
-      this.state = GameStates.initialized;
+      this.state = GameStates.Initialized;
+    },
+
+    async updateBackup() {
+      this.state = GameStates.Start;
+      const text = this.bundle?.contents || '';
+      const path = this.mainSettings?.backupPath || '';
+      console.log(`Writing ${text.length} characters to ${this.mainSettings?.backupPath}`);
+      writeFileSync(path, text, { encoding: 'utf-8' });
+      this.config.lastSavedMd5 = this.bundle?.md5 || 'error!';
+      await this.saveConfig();
+      await this.initialize();
+    },
+
+    async saveConfig() {
+      const json = JSON.stringify(this.config, null, 2);
+      const path = this.mainSettings?.configPath || '';
+      console.log('Saving config, path:', path);
+      console.log(json);
+      writeFileSync(path, json);
+    },
+
+    getCharacterMod(name: string): CharacterMod {
+      this.config.characterMods = this.config.characterMods || {};
+      return this.config.characterMods[name] || {};
+    },
+
+    setCharacterMod(name: string, mod?: CharacterMod) {
+      if (mod) {
+        this.config.characterMods[name] = mod;
+      } else {
+        delete this.config.characterMods[name];
+      }
+      this.saveConfig();
+    },
+
+    saveBundle(contents: string) {
+      if (!this.bundle) {
+        alert('error!');
+        return;
+      }
+
+      const md5 = createHash('md5').update(contents).digest("hex");
+      writeFileSync(this.bundle.filePath, contents, { encoding: 'utf-8' });
+      this.bundle.md5 = md5;
+      this.bundle.contents = contents;
+      this.config.lastSavedMd5 = md5;
+      this.saveConfig();
     }
   }
 })

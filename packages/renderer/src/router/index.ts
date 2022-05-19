@@ -22,6 +22,16 @@ const routes = [
     path: '/about',
     name: 'about',
     component: () => import('../views/AboutView.vue') // lazy importing code cplitting
+  },
+  {
+    path: '/characters/:name',
+    name: 'character',
+    component: () => import('../views/CharacterView.vue')
+  },
+  {
+    path: '/model-test',
+    name: 'model-test',
+    component: () => import('../views/ModelTestView.vue')
   }
 ]
 

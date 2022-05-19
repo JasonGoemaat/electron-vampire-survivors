@@ -45,6 +45,7 @@ export const parseObjects = (contents: string) => {
 }
 
 const indexOfProperty = (contents: string, start: number, end: number, propertyName: string): [number, number, string] => {
+  // TODO: This doesn't work for string properties that have commas in them, i.e. description for 'Lama'
   const first = contents.indexOf(`'${propertyName}':`, start);
   if (first < 0 || first >= end) return [-1, -1, '']; // not found
 
@@ -97,7 +98,7 @@ export const CHARACTER_PROPERTY_NAMES = [
 ]
 
 export const parseCharacters = (contents: string, objects: BundleObject[]): BundleCharacter[] => {
-  const characters = [];
+  const characters: BundleCharacter[] = [];
   for (let i = 0; i < objects.length; i++) {
     const { start, end } = objects[i];
     const charName = indexOfProperty(contents, start, end, 'charName')
@@ -113,8 +114,9 @@ export const parseCharacters = (contents: string, objects: BundleObject[]): Bund
       positions[propertyName] = { startValue, endValue };
     });
 
+    const parsableName = ('"' + charName[2].substring(1, charName[2].length - 1) + '"').replaceAll(/\\\'/g, "'");
     characters.push({
-      name: charName[2],
+      name: JSON.parse(parsableName),
       start,
       end,
       stats,

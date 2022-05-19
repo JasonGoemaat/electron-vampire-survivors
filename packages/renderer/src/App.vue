@@ -8,6 +8,7 @@
     <router-link to="/">Home</router-link> |
     <router-link to="/counter">Counter</router-link> |
     <router-link to="/sample-file">Sample File</router-link> |
+    <router-link to="/model-test">Model Test</router-link>
     <router-link to="/about">About</router-link>
   </nav>
   <router-view/>
@@ -36,5 +37,15 @@
 .error {
   color: red;
   font-weight: bold;;
+}
+
+a.button-link {
+  text-decoration: none;
+  color: blue;
+  cursor: pointer;
+
+  &:hover {
+      text-decoration: underline;
+  }
 }
 </style>
