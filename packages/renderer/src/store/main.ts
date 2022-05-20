@@ -78,7 +78,10 @@ export const useMainStore = defineStore({
         await this.saveConfig();
       }
       this.config = JSON.parse(readFileSync(this.mainSettings?.configPath || '', { encoding: 'utf-8' }));
-      if (this.config.lastSavedMd5 !== this.backup.md5) {
+      if (this.config.lastSavedMd5 !== this.bundle.md5) {
+        console.log('MD5 Mismatch:')
+        console.log(`  Last Saved: '${this.config.lastSavedMd5}'`);
+        console.log(`  Bundle: '${this.bundle.md5}'`);
         this.state = GameStates.HashMismatch;
         return;
       }

@@ -39,12 +39,10 @@
       <a class="button-link" @click="cancel">cancel</a>
     </p>
   </div>
-
-  {{ JSON.stringify(stats[0]) }}
 </template>
 
 <script lang="ts" setup>
-import { ref, computed } from 'vue'
+import { ref } from 'vue'
 import { useRoute, useRouter } from "vue-router";
 import { useMainStore, GameStates } from "../store/main";
 import { BundleCharacter } from "../services/ParserService";
