@@ -5,16 +5,21 @@ export interface CharacterMod {
   regen?: string,
   moveSpeed?: string,
   power?: string,
-  magnet?: string
+  magnet?: string,
+  cooldown?: string,
+  area?: string,
+  speed?: string,
+  duration?: string,
+  amount?: string,
+  growth?: string,
+  greed?: string,
+  curse?: string,
+  revivals?: string,
+  rerolls?: string,
+  skips?: string,
+  banish?: string
+  [x: string]: string | undefined,
 }
-/*
-let maxHp = ref(config.maxHp);
-let armor = ref(config.armor);
-let regen = ref(config.regen);
-let moveSpeed = ref(config.moveSpeed);
-let power = ref(config.power);
-let magnet = ref(config.magnet);
-*/
 
 export type CharacterMods = {
   [key: string]: CharacterMod
@@ -28,6 +33,5 @@ export interface Config {
 export const createDefaultConfig = (): Config => ({
   lastSavedMd5: '',
   characterMods: {
-    "Antonio": {}
   }
 })

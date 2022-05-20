@@ -6,9 +6,10 @@
 <template>
   <nav>
     <router-link to="/">Home</router-link> |
-    <router-link to="/counter">Counter</router-link> |
-    <router-link to="/sample-file">Sample File</router-link> |
-    <router-link to="/model-test">Model Test</router-link>
+    <!-- <router-link to="/counter">Counter</router-link> | -->
+    <!-- <router-link to="/sample-file">Sample File</router-link> | -->
+    <!-- <router-link to="/model-test">Model Test</router-link> | -->
+    <!-- <router-link to="/test-reactive-array">Test Reactive Array</router-link> | -->
     <router-link to="/about">About</router-link>
   </nav>
   <router-view/>
