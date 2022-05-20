@@ -52,18 +52,16 @@
 </template>
 
 <script lang="ts" setup>
-import { writeFileSync } from 'original-fs';
 import { useMainStore, GameStates } from '../store/main'
+import { CharacterMod } from '../models/Config'
+import { ParsedBundle, BundleCharacter} from '../services/ParserService'
 
 const mainStore = useMainStore();
 
 (window as any).mainStore = mainStore;
 
 const initialize = async () => {
-  console.log('you clicked initialize!');
   const result = await mainStore.initialize();
-  console.log('done with HomeView.initialize()');
-  console.log('result:', result);
 }
 
 if (mainStore.state == GameStates.Start) {
@@ -79,12 +77,87 @@ const updateLastSavedHash = async () => {
   mainStore.saveConfig();
 }
 
-const applyCharacterMods = async () => {
+interface Patch {
+  start: number,
+  end: number,
+  value: string
+}
 
+const applyCharacterMods = (contents: string): Patch[] => {
+  if (!(mainStore.parsed && mainStore.parsed.characters)) throw new Error("No parsed characters");
+  const patches: Patch[] = [];
+  const characterMods = mainStore.config.characterMods;
+
+  const apply = (character: BundleCharacter, mod: CharacterMod) => {
+    if (!mod) return;
+    const keys = Object.keys(mod);
+    keys.forEach(key => {
+      const value = mod[key];
+      if (typeof(value) === 'string') {
+        let start = character.positions[key].startValue;
+        let end = character.positions[key].endValue;
+        if (start >= character.start && start < character.end && end >= character.start && end < character.end) {
+          patches.push({
+            start,
+            end,
+            value
+          });
+        }
+      }
+    });
+  }
+
+  (mainStore.parsed as ParsedBundle).characters.forEach(character => {
+    const mods = Object.assign({}, characterMods['DEFAULT'], characterMods[character.name]);
+    apply(character, mods)
+  })
+
+  return patches;
 }
 
 const applyModifications = async () => {
+  if (!mainStore.backup) {
+    alert('error!');
+    return;
+  }
 
+  // apply character mods
+  let patches: Patch[] = [];
+  let contents = mainStore.backup.contents;
+  patches = [...patches, ...applyCharacterMods(contents)];
+  
+  // write updated bundle
+  var newContents = applyPatches(contents, patches);
+  mainStore.saveBundle(newContents);
+  alert("Bundle updated, have fun!");
+}
+
+const applyPatches = (contents: string, patches: Patch[]): string => {
+  const list = patches.sort((a, b) => a.start - b.start);
+  console.log('list:', list);
+  for (let i = 1; i < list.length; i++) {
+    if (list[i].start < list[i-1].end) throw new Error("Overlapping patches!");
+  }
+
+  const parts: string[] = [];
+  let pos = 0;
+  list.forEach(patch => {
+    parts.push(contents.substring(pos, patch.start));
+    parts.push(patch.value);
+    pos = patch.end;
+  });
+  parts.push(contents.substring(pos));
+  const newContents = parts.join('');
+
+  let offset = 0;
+  for(let i = 0; i < list.length; i++) {
+    const patch = list[i];
+    const start = patch.start + offset - 5;
+    const end = patch.end + offset + 5;
+    console.log(`Patching <${contents.substring(patch.start - 5, patch.end + 5)}> to <${newContents.substring(start, end)}>`);
+    offset += patch.value.length - (patch.end - patch.start);
+  }
+  return newContents;
 }
 
 const useBackup = async () => {
@@ -94,5 +167,6 @@ const useBackup = async () => {
   }
 
   mainStore.saveBundle(mainStore.backup.contents)
+  await mainStore.initialize();
 }
 </script>

@@ -32,7 +32,12 @@ const routes = [
     path: '/model-test',
     name: 'model-test',
     component: () => import('../views/ModelTestView.vue')
-  }
+  },
+  {
+    path: '/test-reactive-array',
+    name: 'test-reactive-array',
+    component: () => import('../views/TestReactiveArrayView.vue')
+  },
 ]
 
 const router = createRouter({
